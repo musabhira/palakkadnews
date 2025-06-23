@@ -1,0 +1,33 @@
+{
+  "main_screen.dart": {
+    "old_identifier_name": "MainScreen",
+    "new_identifier_name": "MainScreen",
+    "type": "W",
+    "is_deleted": false,
+    "current_checksum": "6e54c8ab8712562f57dcc1bdd08fb3f93eaf9e5d2c8fe147b3f30ef2e65e2b09",
+    "original_checksum": "136e7a0d9c6e9aa28a0544513ddbdb9db2b61243a6bdf71a088f76f6d478ad33"
+  },
+  "custom_functions.dart": {
+    "old_identifier_name": "CustomFunctions",
+    "new_identifier_name": "CustomFunctions",
+    "type": "F",
+    "is_deleted": false,
+    "current_checksum": "415688756283460139fa2817ca006943c32a3ceb940e28ef903ca9cef86a1b08",
+    "original_checksum": "415688756283460139fa2817ca006943c32a3ceb940e28ef903ca9cef86a1b08"
+  },
+  "pubspec.yaml": {
+    "old_identifier_name": "pubspec.yaml",
+    "new_identifier_name": "pubspec.yaml",
+    "type": "D",
+    "is_deleted": false,
+    "current_checksum": "cc416b9d996ae36c6f7ea2e936a241fbc2d34a188e92bb7c375cc0114cf2cdcd",
+    "original_checksum": "037acf4769813ae775bed17428b6b028c0d158de613bef8503ae506799e0cdd5"
+  },
+  "news_detail_screen.dart": {
+    "old_identifier_name": "NewsDetailScreen",
+    "new_identifier_name": "NewsDetailScreen",
+    "type": "W",
+    "is_deleted": false,
+    "current_checksum": "a6ed2a03050fd136316a0e4d13732c7ae5de07529e39a8688c44a7862e4d16b6"
+  }
+}

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Palakkad News">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="app_launcher_icon.png" />
+  
+  <!-- Default Meta Tags -->
+  <meta id="og-title" property="og:title" content="Palakkad News App" />
+  <meta id="og-description" property="og:description" content="Latest news from Palakkad" />
+  <meta id="og-image" property="og:image" content="https://vfwdnzztsvtapbrjvkxi.supabase.co/storage/v1/object/public/news-media/images/1749461191787_palkkad%20news%20logo.jpg" />
+  <meta id="og-url" property="og:url" content="" />
+  <meta property="og:type" content="article" />
+  <meta property="og:site_name" content="Palakkad News" />
+  
+  <meta id="twitter-title" name="twitter:title" content="Palakkad News App" />
+  <meta id="twitter-description" name="twitter:description" content="Latest news from Palakkad" />
+  <meta id="twitter-image" name="twitter:image" content="https://vfwdnzztsvtapbrjvkxi.supabase.co/storage/v1/object/public/news-media/images/1749461191787_palkkad%20news%20logo.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:site" content="@palakkadnews" />
+  
+  <!-- Additional SEO meta tags -->
+  <meta id="meta-description" name="description" content="Latest news from Palakkad" />
+  <meta name="keywords" content="palakkad, news, kerala, local news, breaking news" />
+  <meta name="author" content="Palakkad News" />
+  
+  <title id="page-title">Palakkad News App</title>
+  
+  <!-- Status Bar color -->
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f1f4f8">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1d2428">
+  
+  <link rel="manifest" href="manifest.json">
+  
+  <script>
+    // Pre-load news data if ID is in URL
+    window.addEventListener('DOMContentLoaded', async function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const newsId = urlParams.get('id');
+      
+      if (newsId) {
+        console.log('🔍 Pre-loading news data for ID:', newsId);
+        
+        try {
+          // Fetch news data immediately
+          const response = await fetch(`https://vfwdnzztsvtapbrjvkxi.supabase.co/rest/v1/news?id=eq.${newsId}&select=*`, {
+            headers: {
+              'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmd2Ruenp0c3Z0YXBicmp2a3hpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkyMzMxMjUsImV4cCI6MjA2NDgwOTEyNX0.CcNyP3_8brVbVRYu8N1G8TG3T0V37H_AVsoCHNw1uvI',
+              'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZmd2Ruenp0c3Z0YXBicmp2a3hpIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0OTIzMzEyNSwiZXhwIjoyMDY0ODA5MTI1fQ.6mC4E3SIBOBNvjrAl7WAMdmZBSAb5ho3fcj9yTiMDHA'
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (data && data.length > 0) {
+            const newsItem = data[0];
+            console.log('✅ News data loaded:', newsItem.title);
+            
+            // Update meta tags immediately
+            updateMetaTagsForNews(newsItem, newsId);
+            
+            // Store for Flutter app
+            window.preloadedNewsData = newsItem;
+          } else {
+            console.warn('❌ No news found for ID:', newsId);
+          }
+        } catch (error) {
+          console.error('❌ Error pre-loading news:', error);
+        }
+      }
+    });
+    
+    function updateMetaTagsForNews(newsItem, newsId) {
+      const title = newsItem.title || 'Palakkad News';
+      const description = newsItem.description || 'Latest news from Palakkad';
+      const imageUrl = newsItem.image_url || 'https://vfwdnzztsvtapbrjvkxi.supabase.co/storage/v1/object/public/news-media/images/1749461191787_palkkad%20news%20logo.jpg';
+      const newsUrl = `https://palakkadonlinenews.com/NewsDetail?id=${newsId}`;
+      
+      console.log('🔄 Updating meta tags with:');
+      console.log('Title:', title);
+      console.log('Description:', description);
+      console.log('Image:', imageUrl);
+      console.log('URL:', newsUrl);
+      
+      // Update Open Graph tags
+      document.getElementById('og-title').setAttribute('content', title);
+      document.getElementById('og-description').setAttribute('content', description);
+      document.getElementById('og-image').setAttribute('content', imageUrl);
+      document.getElementById('og-url').setAttribute('content', newsUrl);
+      
+      // Update Twitter tags
+      document.getElementById('twitter-title').setAttribute('content', title);
+      document.getElementById('twitter-description').setAttribute('content', description);
+      document.getElementById('twitter-image').setAttribute('content', imageUrl);
+      
+      // Update page title and description
+      document.title = title;
+      document.getElementById('page-title').textContent = title;
+      document.getElementById('meta-description').setAttribute('content', description);
+      
+      console.log('✅ Meta tags updated successfully');
+      
+      // Verify the update
+      setTimeout(() => {
+        console.log('🔍 Verification:');
+        console.log('OG Image:', document.getElementById('og-image').getAttribute('content'));
+        console.log('Twitter Image:', document.getElementById('twitter-image').getAttribute('content'));
+      }, 100);
+    }
+    
+    // Function for Flutter to call
+    window.updateNewsMetaTags = function(newsData) {
+      if (!newsData) return;
+      
+      const newsId = new URLSearchParams(window.location.search).get('id');
+      updateMetaTagsForNews(newsData, newsId);
+    };
+    
+    // Debug function
+    window.debugMetaTags = function() {
+      console.log('=== Current Meta Tags ===');
+      console.log('OG Title:', document.getElementById('og-title')?.getAttribute('content'));
+      console.log('OG Description:', document.getElementById('og-description')?.getAttribute('content'));
+      console.log('OG Image:', document.getElementById('og-image')?.getAttribute('content'));
+      console.log('OG URL:', document.getElementById('og-url')?.getAttribute('content'));
+      console.log('Twitter Title:', document.getElementById('twitter-title')?.getAttribute('content'));
+      console.log('Twitter Description:', document.getElementById('twitter-description')?.getAttribute('content'));
+      console.log('Twitter Image:', document.getElementById('twitter-image')?.getAttribute('content'));
+      console.log('Page Title:', document.title);
+    };
+  </script>
+</head>
+<body>
+  <script>
+    {{flutter_bootstrap_js}}
+  </script>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
+
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyA2Lo7J3oJikEDLORtOYdckAXOQLA0NvGY",
+    authDomain: "palakkadnews.firebaseapp.com",
+    projectId: "palakkadnews",
+    storageBucket: "palakkadnews.firebasestorage.app",
+    messagingSenderId: "974926284581",
+    appId: "1:974926284581:web:4d27b4a0f278af1fbcbccc"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+</script>
+</body>
+</html>

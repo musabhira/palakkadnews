@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "974926284581",
+    "project_id": "palakkadnews",
+    "storage_bucket": "palakkadnews.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:974926284581:android:316f1787ffda42edbcbccc",
+        "android_client_info": {
+          "package_name": "com.mycompany.palakkadnewsapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDCsoa35_JzSY9FHIymIrpCP-rZKLry0cE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

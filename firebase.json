@@ -1,0 +1,18 @@
+{
+  "functions": {
+    "source": "functions"
+  },
+  "hosting": {
+    "public": "build/web",
+    "rewrites": [
+      {
+        "source": "/og**",
+        "function": "ogNews"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}

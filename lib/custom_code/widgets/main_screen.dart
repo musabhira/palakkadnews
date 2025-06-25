@@ -158,6 +158,40 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  String _getCurrentDate() {
+    final now = DateTime.now();
+    final weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday'
+    ];
+    final months = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
+    ];
+
+    final weekday = weekdays[now.weekday - 1];
+    final month = months[now.month - 1];
+    final day = now.day;
+    final year = now.year;
+
+    return '$weekday, $month $day, $year';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,17 +233,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   color: Colors.white, size: 20),
                             ),
                             Text(
-                              'Wednesday, June 25, 2025',
+                              _getCurrentDate(),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 14,
+                                fontSize: 13,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             GestureDetector(
                               onTap: () => _showAdminLogin(context),
                               child: Icon(Icons.admin_panel_settings,
-                                  color: Colors.black, size: 24),
+                                  color: Colors.black, size: 11),
                             ),
                           ],
                         ),
@@ -222,14 +256,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             _buildSocialIcon(Icons.facebook, Colors.blue[800]!),
-                            SizedBox(width: 5),
+                            SizedBox(width: 6),
                             _buildSocialIcon(
                                 Icons.camera_alt, Colors.lightBlue),
-                            SizedBox(width: 5),
+                            SizedBox(width: 6),
                             _buildSocialIcon(Icons.camera, Colors.purple),
-                            SizedBox(width: 5),
+                            SizedBox(width: 6),
                             _buildSocialIcon(Icons.circle, Colors.red[700]!),
-                            SizedBox(width: 5),
+                            SizedBox(width: 6),
                             _buildSocialIcon(Icons.play_arrow, Colors.red),
                           ],
                         ),
@@ -240,10 +274,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Container(
-                              height: 90,
-                              width: 200,
+                              height: 89,
+                              width: 210,
                               margin: EdgeInsets.symmetric(
-                                  horizontal: 4, vertical: 0),
+                                  horizontal: 3, vertical: 0),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(12),
@@ -265,7 +299,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                       decoration: BoxDecoration(
                                         gradient: LinearGradient(
                                           colors: [
-                                            Colors.red[700]!,
+                                            Colors.red[701]!,
                                             Colors.red[500]!
                                           ],
                                         ),

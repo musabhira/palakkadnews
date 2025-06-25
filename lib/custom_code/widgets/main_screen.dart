@@ -1,4 +1,6 @@
 // Automatic FlutterFlow imports
+import 'package:palakkad_news_app/custom_code/widgets/news_detail_screen.dart';
+
 import '/backend/supabase/supabase.dart';
 import '/flutter_flow/flutter_flow_theme.dart';
 import '/flutter_flow/flutter_flow_util.dart';
@@ -69,19 +71,18 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   late TabController _tabController;
+  List<Map<String, dynamic>> news = [];
+  final supabase = Supabase.instance.client;
+
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    _fetchNews();
     _tabController = TabController(length: 5, vsync: this);
   }
 
-  // void _showAdminLogin(BuildContext context) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(builder: (context) => AdminDashboard()),
-  //   );
-  // }
   void _showAdminLogin(BuildContext context) {
     String password = '';
     showDialog(
@@ -126,318 +127,253 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  Future<void> _fetchNews() async {
+    try {
+      final response = 'breaking' == 'all'
+          ? await supabase
+              .from('news')
+              .select()
+              .order('created_at', ascending: false)
+          : await supabase
+              .from('news')
+              .select()
+              .eq('category', 'breaking')
+              .order('created_at', ascending: false);
+
+      setState(() {
+        news = List<Map<String, dynamic>>.from(response);
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() => isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching news: $e'),
+          backgroundColor: Color(0xFFE53E3E),
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF8FAFC),
+      backgroundColor: Colors.grey[100],
       body: NestedScrollView(
         headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
           return <Widget>[
+            // Modern Header
             SliverAppBar(
-              expandedHeight: 200.0,
+              expandedHeight: 250.0,
               floating: false,
               pinned: true,
-              snap: false,
               elevation: 0,
-              backgroundColor: Color.fromARGB(255, 248, 11, 31),
-              title: AnimatedBuilder(
-                animation: ModalRoute.of(context)?.animation ??
-                    kAlwaysCompleteAnimation,
-                builder: (context, child) {
-                  return Container(
-                    height: 40,
-                    child: Row(
-                      children: [
-                        Container(
-                          height: 35,
-                          width: 35,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Colors.white,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.newspaper,
-                            color: Color.fromARGB(255, 248, 11, 31),
-                            size: 19,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'www.palakkadonlinenews.com',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+              backgroundColor: Colors.grey[900],
               flexibleSpace: FlexibleSpaceBar(
-                background: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Background gradient
-                    Container(
-                      decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Color.fromARGB(255, 248, 11, 31),
-                            Color.fromARGB(255, 236, 94, 120),
-                            Color.fromARGB(255, 255, 152, 167),
-                          ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                      ),
+                background: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [Colors.white!, Colors.white!],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
                     ),
-                    // Overlay pattern for visual depth
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.black.withOpacity(0.1),
-                            Colors.transparent,
-                            Colors.black.withOpacity(0.1),
-                          ],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                      ),
-                    ),
-                    // Main content
-                    Positioned(
-                      top: 80,
-                      left: 16,
-                      right: 16,
-                      child: Column(
-                        children: [
-                          // Logo/Image container
-                          Container(
-                            height: 100,
-                            width: double.infinity,
-                            margin: EdgeInsets.symmetric(horizontal: 20),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  offset: Offset(0, 8),
-                                  spreadRadius: 2,
-                                ),
-                              ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Top bar with menu and date
+                      Container(
+                        color: Colors.black,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.red[700],
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(Icons.menu,
+                                  color: Colors.white, size: 20),
                             ),
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(16),
-                              child: Stack(
-                                fit: StackFit.expand,
-                                children: [
-                                  // Placeholder for image
-                                  Image.asset(
-                                    'assets/images/palakkadnewspic.jpg',
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Colors.white.withOpacity(0.95),
-                                              Colors.white.withOpacity(0.85),
-                                            ],
-                                            begin: Alignment.topLeft,
-                                            end: Alignment.bottomRight,
-                                          ),
-                                        ),
-                                        child: Center(
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.newspaper,
-                                                size: 28,
-                                                color: Color.fromARGB(
-                                                    255, 248, 11, 31),
-                                              ),
-                                              SizedBox(height: 4),
-                                              Text(
-                                                'Palakkad News',
-                                                style: TextStyle(
-                                                  color: Color.fromARGB(
-                                                      255, 248, 11, 31),
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 18,
-                                                  letterSpacing: 1.2,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  // Subtle overlay for better text visibility if needed
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.transparent,
-                                          Colors.black.withOpacity(0.1),
-                                        ],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                    ),
+                            Text(
+                              'Wednesday, June 25, 2025',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () => _showAdminLogin(context),
+                              child: Icon(Icons.admin_panel_settings,
+                                  color: Colors.black, size: 24),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Container(
+                        color: const Color.fromARGB(255, 31, 31, 31),
+                        height: 40,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildSocialIcon(Icons.facebook, Colors.blue[800]!),
+                            SizedBox(width: 5),
+                            _buildSocialIcon(
+                                Icons.camera_alt, Colors.lightBlue),
+                            SizedBox(width: 5),
+                            _buildSocialIcon(Icons.camera, Colors.purple),
+                            SizedBox(width: 5),
+                            _buildSocialIcon(Icons.circle, Colors.red[700]!),
+                            SizedBox(width: 5),
+                            _buildSocialIcon(Icons.play_arrow, Colors.red),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Container(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              height: 90,
+                              width: 200,
+                              margin: EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 0),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
                                   ),
                                 ],
                               ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.asset(
+                                  'assets/images/palakkadnewspic.jpg',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Colors.red[700]!,
+                                            Colors.red[500]!
+                                          ],
+                                        ),
+                                      ),
+                                      child: Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(Icons.play_circle_fill,
+                                                color: Colors.white, size: 32),
+                                            SizedBox(height: 8),
+                                            Text(
+                                              'PALAKKAD NEWS LIVE',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 12,
+                                                letterSpacing: 1.2,
+                                              ),
+                                            ),
+                                            Text(
+                                              'www.palakkadonlinenews.com',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+
+                      // Logo section
+                    ],
+                  ),
                 ),
               ),
-              // Actions in the app bar
-              actions: [
-                Container(
-                  margin: const EdgeInsets.only(right: 12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.admin_panel_settings,
-                      color: Colors.white,
-                      size: 24,
-                    ),
-                    onPressed: () => _showAdminLogin(context),
+              // Bottom navigation bar
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(60),
+                child: Container(
+                  color: Colors.grey[900],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavIcon(Icons.home, true),
+                      InkWell(
+                        onTap: () {
+                          _showAdminLogin(context);
+                        },
+                        child: _buildNavIcon(Icons.menu, false),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SearchScreen()),
+                          );
+                        },
+                        child: _buildNavIcon(Icons.search, false),
+                      ),
+                      _buildNavIcon(Icons.shuffle, false),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
-            // Custom tab bar as a sliver
+
+            // Breaking News Header
+            SliverToBoxAdapter(
+              child: Container(
+                height: 200,
+                color: Colors.grey[100],
+                child: Container(
+                  child: SimplePageViewNewsWidget(
+                    news: news,
+                    onRefresh: _fetchNews,
+                  ),
+                ),
+              ),
+            ),
+
+            // Custom tab bar
             SliverPersistentHeader(
               delegate: _SliverTabBarDelegate(
                 TabBar(
                   controller: _tabController,
                   isScrollable: true,
-                  indicatorColor: Color.fromARGB(255, 248, 11, 31),
+                  indicatorColor: Colors.red[700],
                   indicatorWeight: 3,
-                  indicatorPadding: EdgeInsets.symmetric(horizontal: 12),
-                  labelColor: Color.fromARGB(255, 248, 11, 31),
+                  labelColor: Colors.red[700],
                   unselectedLabelColor: Colors.grey[600],
-                  labelStyle: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                  unselectedLabelStyle: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  labelStyle: TextStyle(fontWeight: FontWeight.bold),
                   tabs: [
-                    Tab(
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('🔥'),
-                            SizedBox(width: 4),
-                            Text('Breaking'),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('📈'),
-                            SizedBox(width: 4),
-                            Text('Trending'),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('💼'),
-                            SizedBox(width: 4),
-                            Text('Jobs'),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('🌹'),
-                            SizedBox(width: 4),
-                            Text('Memorial'),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Tab(
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('📰'),
-                            SizedBox(width: 4),
-                            Text('All News'),
-                          ],
-                        ),
-                      ),
-                    ),
+                    Tab(text: 'Breaking'),
+                    Tab(text: 'Trending'),
+                    Tab(text: 'Jobs'),
+                    Tab(text: 'Memorial'),
+                    Tab(text: 'All News'),
                   ],
                 ),
               ),
@@ -446,16 +382,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ];
         },
         body: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Color(0xFFF8FAFC),
-                Colors.white,
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+          color: Colors.grey[100],
           child: TabBarView(
             controller: _tabController,
             children: [
@@ -468,39 +395,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
       ),
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.green.withOpacity(0.3),
-              blurRadius: 12,
-              offset: Offset(0, 6),
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        child: FloatingActionButton.extended(
-          onPressed: () async {
-            final Uri whatsappGroupUrl =
-                Uri.parse("https://chat.whatsapp.com/G6Zj0ajnIcQ8gm1GyCDgmG");
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          final Uri whatsappGroupUrl =
+              Uri.parse("https://chat.whatsapp.com/G6Zj0ajnIcQ8gm1GyCDgmG");
 
-            if (await canLaunchUrl(whatsappGroupUrl)) {
-              await launchUrl(whatsappGroupUrl,
-                  mode: LaunchMode.externalApplication);
-            } else {
-              print("Could not launch WhatsApp group link");
-            }
-          },
-          icon: Icon(Icons.group, size: 20),
-          label: Text(
-            'Join Group',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          elevation: 0,
-        ),
+          if (await canLaunchUrl(whatsappGroupUrl)) {
+            await launchUrl(whatsappGroupUrl,
+                mode: LaunchMode.externalApplication);
+          } else {
+            print("Could not launch WhatsApp group link");
+          }
+        },
+        icon: Icon(Icons.group, size: 20),
+        label: Text('Join Group'),
+        backgroundColor: Colors.green,
+        foregroundColor: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildSocialIcon(IconData icon, Color color) {
+    return Container(
+      width: 23,
+      height: 20,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Icon(icon, color: Colors.white, size: 15),
+    );
+  }
+
+  Widget _buildNavIcon(IconData icon, bool isActive) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      child: Icon(
+        icon,
+        color: isActive ? Colors.white : Colors.grey[600],
+        size: 24,
       ),
     );
   }
@@ -5471,16 +5404,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
-        ],
-      ),
+      color: Colors.white,
       child: _tabBar,
     );
   }

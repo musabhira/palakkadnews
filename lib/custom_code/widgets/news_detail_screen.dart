@@ -984,9 +984,12 @@ ${newsItem!['description'] ?? ''}
                         ),
                       ),
                       SizedBox(height: 16),
-                      AutoScrollingNewsWidget(
-                        news: news,
-                        onRefresh: _fetchNews,
+                      SizedBox(
+                        height: 200,
+                        child: SimplePageViewNewsWidget(
+                          news: news,
+                          onRefresh: _fetchNews,
+                        ),
                       ),
                       SizedBox(height: 18),
                       if (newsItem!['image_url'] != null)
@@ -1221,13 +1224,13 @@ ${newsItem!['description'] ?? ''}
 }
 
 // Make sure you have AppConstants defined somewhere in your project
-class AutoScrollingNewsWidget extends StatefulWidget {
+class SimplePageViewNewsWidget extends StatefulWidget {
   final List<Map<String, dynamic>> news;
   final Function(BuildContext, Map<String, dynamic>)? onNavigateToDetail;
   final Function(Map<String, dynamic>)? onShowDeleteConfirmation;
   final Future<void> Function() onRefresh;
 
-  const AutoScrollingNewsWidget({
+  const SimplePageViewNewsWidget({
     Key? key,
     required this.news,
     this.onNavigateToDetail,
@@ -1236,35 +1239,37 @@ class AutoScrollingNewsWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AutoScrollingNewsWidgetState createState() =>
-      _AutoScrollingNewsWidgetState();
+  _SimplePageViewNewsWidgetState createState() =>
+      _SimplePageViewNewsWidgetState();
 }
 
-class _AutoScrollingNewsWidgetState extends State<AutoScrollingNewsWidget>
-    with TickerProviderStateMixin {
-  late ScrollController _scrollController;
-  late AnimationController _shimmerController;
+class _SimplePageViewNewsWidgetState extends State<SimplePageViewNewsWidget> {
+  late PageController _pageController;
+  int _currentIndex = 0;
   Timer? _autoScrollTimer;
   Timer? _resumeScrollTimer;
-  int _currentIndex = 0;
-  bool _isUserScrolling = false;
   bool _isLoading = false;
+  bool _isUserScrolling = false;
 
   @override
   void initState() {
     super.initState();
-    _scrollController = ScrollController();
-    _shimmerController = AnimationController(
-      duration: Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat();
-
+    _pageController = PageController();
     _startAutoScroll();
+  }
 
-    // Listen for user scroll interactions
-    _scrollController.addListener(() {
-      if (_scrollController.position.isScrollingNotifier.value) {
-        _handleUserScroll();
+  void _startAutoScroll() {
+    _autoScrollTimer?.cancel();
+    if (widget.news.isEmpty) return;
+
+    _autoScrollTimer = Timer.periodic(Duration(seconds: 2), (timer) {
+      if (_pageController.hasClients && mounted && !_isUserScrolling) {
+        _currentIndex = (_currentIndex + 1) % widget.news.length;
+        _pageController.animateToPage(
+          _currentIndex,
+          duration: Duration(milliseconds: 1000),
+          curve: Curves.easeInOutCubic,
+        );
       }
     });
   }
@@ -1276,9 +1281,9 @@ class _AutoScrollingNewsWidgetState extends State<AutoScrollingNewsWidget>
       });
       _stopAutoScroll();
 
-      // Resume auto-scroll after 8 seconds of no interaction
+      // Resume auto-scroll after 6 seconds of no interaction
       _resumeScrollTimer?.cancel();
-      _resumeScrollTimer = Timer(Duration(seconds: 8), () {
+      _resumeScrollTimer = Timer(Duration(seconds: 2), () {
         if (mounted) {
           setState(() {
             _isUserScrolling = false;
@@ -1289,30 +1294,6 @@ class _AutoScrollingNewsWidgetState extends State<AutoScrollingNewsWidget>
     }
   }
 
-  void _startAutoScroll() {
-    _autoScrollTimer?.cancel();
-    if (widget.news.isEmpty) return;
-
-    _autoScrollTimer = Timer.periodic(Duration(seconds: 4), (timer) {
-      if (!_isUserScrolling && _scrollController.hasClients && mounted) {
-        _scrollToNextItem();
-      }
-    });
-  }
-
-  void _scrollToNextItem() {
-    if (widget.news.isEmpty) return;
-
-    _currentIndex = (_currentIndex + 1) % widget.news.length;
-    double targetOffset = _currentIndex * 320.0; // Item width + margin
-
-    _scrollController.animateTo(
-      targetOffset,
-      duration: Duration(milliseconds: 1200),
-      curve: Curves.easeInOutCubic,
-    );
-  }
-
   void _stopAutoScroll() {
     _autoScrollTimer?.cancel();
     _resumeScrollTimer?.cancel();
@@ -1321,95 +1302,33 @@ class _AutoScrollingNewsWidgetState extends State<AutoScrollingNewsWidget>
   @override
   void dispose() {
     _stopAutoScroll();
-    _scrollController.dispose();
-    _shimmerController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  // Enhanced navigation function
   void _navigateToDetail(BuildContext context, Map<String, dynamic> newsItem) {
-    // Add haptic feedback for better UX
-    if (!kIsWeb) {
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              NewsDetailScreen(id: newsItem['id'] as String),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            NewsDetailScreen(id: newsItem['id'] as String),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(1.0, 0.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
 
-            var tween = Tween(begin: begin, end: end).chain(
-              CurveTween(curve: curve),
-            );
+          var tween = Tween(begin: begin, end: end).chain(
+            CurveTween(curve: curve),
+          );
 
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-          transitionDuration: Duration(milliseconds: 300),
-        ),
-      );
-    }
-
-    if (kIsWeb) {
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              NewsDetailScreen(id: newsItem['id'] as String),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
-
-            var tween = Tween(begin: begin, end: end).chain(
-              CurveTween(curve: curve),
-            );
-
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-          transitionDuration: Duration(milliseconds: 300),
-        ),
-      );
-      print('Navigating to news detail: ${newsItem['id']}');
-    } else if (Platform.isAndroid ||
-        Platform.isIOS ||
-        Platform.isWindows ||
-        Platform.isMacOS ||
-        Platform.isLinux) {
-      // For Mobile/Desktop, use Navigator.push
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              NewsDetailScreen(id: newsItem['id'] as String),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0);
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
-
-            var tween = Tween(begin: begin, end: end).chain(
-              CurveTween(curve: curve),
-            );
-
-            return SlideTransition(
-              position: animation.drive(tween),
-              child: child,
-            );
-          },
-          transitionDuration: Duration(milliseconds: 300),
-        ),
-      );
-    } else {
-      // Fallback
-      context.pushNamed('news_detail', extra: newsItem);
-    }
+          return SlideTransition(
+            position: animation.drive(tween),
+            child: child,
+          );
+        },
+        transitionDuration: Duration(milliseconds: 300),
+      ),
+    );
   }
 
   Color _getCategoryColor(String? category) {
@@ -1475,36 +1394,6 @@ class _AutoScrollingNewsWidgetState extends State<AutoScrollingNewsWidget>
     }
   }
 
-  Widget _buildShimmerPlaceholder() {
-    return AnimatedBuilder(
-      animation: _shimmerController,
-      builder: (context, child) {
-        return Container(
-          width: 300,
-          margin: EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [
-                Colors.grey[300]!,
-                Colors.grey[100]!,
-                Colors.grey[300]!,
-              ],
-              stops: [
-                0.0,
-                _shimmerController.value,
-                1.0,
-              ],
-              begin: Alignment(-1.0, 0.0),
-              end: Alignment(1.0, 0.0),
-            ),
-          ),
-          height: 180,
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1531,505 +1420,478 @@ class _AutoScrollingNewsWidgetState extends State<AutoScrollingNewsWidget>
         color: Color(0xFF667EEA),
         backgroundColor: Colors.white,
         strokeWidth: 3,
-        child: SizedBox(
-          height: 320,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with auto-scroll indicator
-              Padding(
-                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [Color(0xFF667EEA), Color(0xFF764BA2)],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.newspaper_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Latest News',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF1E293B),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        if (!_isUserScrolling)
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Color(0xFF10B981),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.play_arrow,
-                                    color: Colors.white, size: 12),
-                                SizedBox(width: 4),
-                                Text(
-                                  'Auto',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        SizedBox(width: 8),
-                        Text(
-                          '${widget.news.length} stories',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Color(0xFF64748B),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+        child: Column(
+          children: [
+            // Header
 
-              // News list
-              Expanded(
-                child: _isLoading
-                    ? ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        itemCount: 3,
-                        itemBuilder: (context, index) =>
-                            _buildShimmerPlaceholder(),
-                      )
-                    : NotificationListener<ScrollNotification>(
-                        onNotification: (ScrollNotification notification) {
-                          if (notification is ScrollStartNotification) {
-                            _handleUserScroll();
-                          }
-                          return false;
-                        },
-                        child: ListView.builder(
-                          controller: _scrollController,
-                          scrollDirection: Axis.horizontal,
-                          padding: EdgeInsets.symmetric(horizontal: 8),
-                          itemCount: widget.news.length,
-                          itemBuilder: (context, index) {
-                            final item = widget.news[index];
-                            return Hero(
-                              tag: 'news_${item['id']}',
-                              child: Container(
-                                width: 150,
-                                margin: EdgeInsets.only(right: 20),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Color(0xFF667EEA).withOpacity(0.08),
-                                      spreadRadius: 0,
-                                      blurRadius: 20,
-                                      offset: Offset(0, 8),
+            // PageView Content
+            Expanded(
+              child: _isLoading
+                  ? Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF667EEA),
+                      ),
+                    )
+                  : widget.news.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No news available',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 16,
+                            ),
+                          ),
+                        )
+                      : Column(
+                          children: [
+                            // PageView
+                            Expanded(
+                              child: PageView.builder(
+                                controller: _pageController,
+                                onPageChanged: (index) {
+                                  setState(() {
+                                    _currentIndex = index;
+                                  });
+                                  // Handle user interaction
+                                  _handleUserScroll();
+                                },
+                                itemCount: widget.news.length,
+                                itemBuilder: (context, index) {
+                                  final item = widget.news[index];
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(0xFF667EEA)
+                                              .withOpacity(0.08),
+                                          spreadRadius: 0,
+                                          blurRadius: 20,
+                                          offset: Offset(0, 8),
+                                        ),
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.04),
+                                          spreadRadius: 0,
+                                          blurRadius: 6,
+                                          offset: Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.04),
-                                      spreadRadius: 0,
-                                      blurRadius: 6,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    onTap: () =>
-                                        _navigateToDetail(context, item),
-                                    onLongPress:
-                                        widget.onShowDeleteConfirmation != null
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () =>
+                                            _navigateToDetail(context, item),
+                                        onLongPress: widget
+                                                    .onShowDeleteConfirmation !=
+                                                null
                                             ? () => widget
                                                 .onShowDeleteConfirmation!(item)
                                             : null,
-                                    borderRadius: BorderRadius.circular(20),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // Image section with enhanced design
-                                        Container(
-                                          height: 100,
-                                          child: Stack(
-                                            children: [
-                                              ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        top: Radius.circular(
-                                                            20)),
-                                                child: Container(
-                                                  width: double.infinity,
-                                                  height: double.infinity,
-                                                  child:
-                                                      item['image_url'] != null
-                                                          ? Image.network(
-                                                              item['image_url'],
-                                                              fit: BoxFit.cover,
-                                                              loadingBuilder:
-                                                                  (context,
-                                                                      child,
-                                                                      loadingProgress) {
-                                                                if (loadingProgress ==
-                                                                    null)
-                                                                  return child;
-                                                                return Container(
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    gradient:
-                                                                        LinearGradient(
-                                                                      colors: [
-                                                                        _getCategoryColor(item['category'])
-                                                                            .withOpacity(0.3),
-                                                                        _getCategoryColor(item['category'])
-                                                                            .withOpacity(0.1),
-                                                                      ],
-                                                                      begin: Alignment
-                                                                          .topLeft,
-                                                                      end: Alignment
-                                                                          .bottomRight,
-                                                                    ),
-                                                                  ),
-                                                                  child: Center(
-                                                                    child:
-                                                                        CircularProgressIndicator(
-                                                                      color: _getCategoryColor(
-                                                                          item[
-                                                                              'category']),
-                                                                      strokeWidth:
-                                                                          2,
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                              errorBuilder:
-                                                                  (context,
-                                                                      error,
-                                                                      stackTrace) {
-                                                                return Container(
-                                                                  decoration:
-                                                                      BoxDecoration(
-                                                                    gradient:
-                                                                        LinearGradient(
-                                                                      colors: [
-                                                                        _getCategoryColor(
-                                                                            item['category']),
-                                                                        _getCategoryColor(item['category'])
-                                                                            .withOpacity(0.7),
-                                                                      ],
-                                                                      begin: Alignment
-                                                                          .topLeft,
-                                                                      end: Alignment
-                                                                          .bottomRight,
-                                                                    ),
-                                                                  ),
-                                                                  child: Center(
-                                                                    child:
-                                                                        Column(
-                                                                      mainAxisAlignment:
-                                                                          MainAxisAlignment
-                                                                              .center,
-                                                                      children: [
-                                                                        Text(
-                                                                          _getCategoryEmoji(
-                                                                              item['category']),
-                                                                          style:
-                                                                              TextStyle(fontSize: 24),
-                                                                        ),
-                                                                        SizedBox(
-                                                                            height:
-                                                                                4),
-                                                                        Icon(
-                                                                          Icons
-                                                                              .image_not_supported_outlined,
-                                                                          size:
-                                                                              20,
-                                                                          color: Colors
-                                                                              .white
-                                                                              .withOpacity(0.8),
-                                                                        ),
-                                                                      ],
-                                                                    ),
-                                                                  ),
-                                                                );
-                                                              },
-                                                            )
-                                                          : Container(
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                gradient:
-                                                                    LinearGradient(
-                                                                  colors: [
-                                                                    _getCategoryColor(item[
-                                                                            'category'])
-                                                                        .withOpacity(
-                                                                            0.8),
-                                                                    _getCategoryColor(item[
-                                                                            'category'])
-                                                                        .withOpacity(
-                                                                            0.4),
-                                                                  ],
-                                                                  begin: Alignment
-                                                                      .topLeft,
-                                                                  end: Alignment
-                                                                      .bottomRight,
-                                                                ),
-                                                              ),
-                                                              child: Center(
-                                                                child: Text(
-                                                                  _getCategoryEmoji(
-                                                                      item[
-                                                                          'category']),
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          36),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                ),
-                                              ),
-
-                                              // Category badge with glow effect
-                                              Positioned(
-                                                top: 12,
-                                                left: 12,
-                                                child: Container(
-                                                  padding: EdgeInsets.symmetric(
-                                                      horizontal: 10,
-                                                      vertical: 6),
-                                                  decoration: BoxDecoration(
-                                                    color: _getCategoryColor(
-                                                        item['category']),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            16),
-                                                    boxShadow: [
-                                                      BoxShadow(
-                                                        color: _getCategoryColor(
-                                                                item[
-                                                                    'category'])
-                                                            .withOpacity(0.4),
-                                                        blurRadius: 8,
-                                                        offset: Offset(0, 2),
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Row(
+                                          children: [
+                                            // Left side - Image
+                                            Expanded(
+                                              flex: 2,
+                                              child: Container(
+                                                height: double.infinity,
+                                                child: Stack(
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.only(
+                                                        topLeft:
+                                                            Radius.circular(16),
+                                                        bottomLeft:
+                                                            Radius.circular(16),
                                                       ),
-                                                    ],
-                                                  ),
-                                                  child: Text(
-                                                    (item['category'] ?? 'NEWS')
-                                                        .toString()
-                                                        .toUpperCase(),
-                                                    style: TextStyle(
-                                                      color: Colors.white,
-                                                      fontSize: 9,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      letterSpacing: 0.5,
+                                                      child: Container(
+                                                        width: double.infinity,
+                                                        height: double.infinity,
+                                                        child:
+                                                            item['image_url'] !=
+                                                                    null
+                                                                ? Image.network(
+                                                                    item[
+                                                                        'image_url'],
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    loadingBuilder:
+                                                                        (context,
+                                                                            child,
+                                                                            loadingProgress) {
+                                                                      if (loadingProgress ==
+                                                                          null)
+                                                                        return child;
+                                                                      return Container(
+                                                                        decoration:
+                                                                            BoxDecoration(
+                                                                          gradient:
+                                                                              LinearGradient(
+                                                                            colors: [
+                                                                              _getCategoryColor(item['category']).withOpacity(0.3),
+                                                                              _getCategoryColor(item['category']).withOpacity(0.1),
+                                                                            ],
+                                                                            begin:
+                                                                                Alignment.topLeft,
+                                                                            end:
+                                                                                Alignment.bottomRight,
+                                                                          ),
+                                                                        ),
+                                                                        child:
+                                                                            Center(
+                                                                          child:
+                                                                              CircularProgressIndicator(
+                                                                            color:
+                                                                                _getCategoryColor(item['category']),
+                                                                            strokeWidth:
+                                                                                2,
+                                                                          ),
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                    errorBuilder:
+                                                                        (context,
+                                                                            error,
+                                                                            stackTrace) {
+                                                                      return Container(
+                                                                        decoration:
+                                                                            BoxDecoration(
+                                                                          gradient:
+                                                                              LinearGradient(
+                                                                            colors: [
+                                                                              _getCategoryColor(item['category']),
+                                                                              _getCategoryColor(item['category']).withOpacity(0.7),
+                                                                            ],
+                                                                            begin:
+                                                                                Alignment.topLeft,
+                                                                            end:
+                                                                                Alignment.bottomRight,
+                                                                          ),
+                                                                        ),
+                                                                        child:
+                                                                            Center(
+                                                                          child:
+                                                                              Column(
+                                                                            mainAxisAlignment:
+                                                                                MainAxisAlignment.center,
+                                                                            children: [
+                                                                              Text(
+                                                                                _getCategoryEmoji(item['category']),
+                                                                                style: TextStyle(fontSize: 32),
+                                                                              ),
+                                                                              SizedBox(height: 8),
+                                                                              Icon(
+                                                                                Icons.image_not_supported_outlined,
+                                                                                size: 24,
+                                                                                color: Colors.white.withOpacity(0.8),
+                                                                              ),
+                                                                            ],
+                                                                          ),
+                                                                        ),
+                                                                      );
+                                                                    },
+                                                                  )
+                                                                : Container(
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                      gradient:
+                                                                          LinearGradient(
+                                                                        colors: [
+                                                                          _getCategoryColor(item['category'])
+                                                                              .withOpacity(0.8),
+                                                                          _getCategoryColor(item['category'])
+                                                                              .withOpacity(0.4),
+                                                                        ],
+                                                                        begin: Alignment
+                                                                            .topLeft,
+                                                                        end: Alignment
+                                                                            .bottomRight,
+                                                                      ),
+                                                                    ),
+                                                                    child:
+                                                                        Center(
+                                                                      child:
+                                                                          Text(
+                                                                        _getCategoryEmoji(
+                                                                            item['category']),
+                                                                        style: TextStyle(
+                                                                            fontSize:
+                                                                                48),
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                      ),
                                                     ),
-                                                  ),
+                                                    // Category badge
+                                                    Positioned(
+                                                      top: 12,
+                                                      left: 12,
+                                                      child: Container(
+                                                        padding: EdgeInsets
+                                                            .symmetric(
+                                                          horizontal: 12,
+                                                          vertical: 6,
+                                                        ),
+                                                        decoration:
+                                                            BoxDecoration(
+                                                          color: _getCategoryColor(
+                                                              item['category']),
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(20),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: _getCategoryColor(
+                                                                      item[
+                                                                          'category'])
+                                                                  .withOpacity(
+                                                                      0.4),
+                                                              blurRadius: 8,
+                                                              offset:
+                                                                  Offset(0, 2),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        child: Text(
+                                                          (item['category'] ??
+                                                                  'NEWS')
+                                                              .toString()
+                                                              .toUpperCase(),
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 10,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 0.5,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
+                                            ),
 
-                                              // Gradient overlay for better text readability
-                                              Positioned(
-                                                bottom: 0,
-                                                left: 0,
-                                                right: 0,
-                                                child: Container(
-                                                  height: 30,
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      begin:
-                                                          Alignment.topCenter,
-                                                      end: Alignment
-                                                          .bottomCenter,
-                                                      colors: [
-                                                        Colors.transparent,
-                                                        Colors.black
-                                                            .withOpacity(0.1),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-
-                                        // Content section with improved spacing
-                                        Expanded(
-                                          child: Padding(
-                                            padding: EdgeInsets.all(16),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                // Title
-                                                Text(
-                                                  item['title'] ?? 'No title',
-                                                  style: TextStyle(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color(0xFF1E293B),
-                                                    height: 1.3,
-                                                  ),
-                                                  maxLines: 2,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-
-                                                SizedBox(height: 8),
-
-                                                // Description
-                                                if (item['description'] !=
-                                                        null &&
-                                                    item['description']
-                                                        .toString()
-                                                        .trim()
-                                                        .isNotEmpty)
-                                                  Text(
-                                                    item['description'],
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Color(0xFF64748B),
-                                                      height: 1.4,
-                                                    ),
-                                                    maxLines: 2,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-
-                                                Spacer(),
-
-                                                // Footer with time and action button
-                                                Row(
+                                            // Right side - Content
+                                            Expanded(
+                                              flex: 3,
+                                              child: Padding(
+                                                padding: EdgeInsets.all(20),
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   children: [
-                                                    Expanded(
-                                                      child: Row(
-                                                        children: [
-                                                          Container(
-                                                            padding:
-                                                                EdgeInsets.all(
-                                                                    3),
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              color: Color(
-                                                                      0xFF667EEA)
-                                                                  .withOpacity(
-                                                                      0.1),
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          6),
-                                                            ),
-                                                            child: Icon(
-                                                              Icons
-                                                                  .access_time_rounded,
-                                                              size: 10,
-                                                              color: Color(
-                                                                  0xFF667EEA),
-                                                            ),
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        // Title
+                                                        Text(
+                                                          item['title'] ??
+                                                              'No title',
+                                                          style: TextStyle(
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Color(
+                                                                0xFF1E293B),
+                                                            height: 1.3,
                                                           ),
-                                                          SizedBox(width: 6),
-                                                          Expanded(
-                                                            child: Text(
+                                                          maxLines: 3,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+
+                                                        SizedBox(height: 2),
+
+                                                        // Description
+                                                        if (item['description'] !=
+                                                                null &&
+                                                            item['description']
+                                                                .toString()
+                                                                .trim()
+                                                                .isNotEmpty)
+                                                          Text(
+                                                            item['description'],
+                                                            style: TextStyle(
+                                                              fontSize: 14,
+                                                              color: Color(
+                                                                  0xFF64748B),
+                                                              height: 1.5,
+                                                            ),
+                                                            maxLines: 4,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                      ],
+                                                    ),
+
+                                                    // Footer with time and read more
+                                                    Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Row(
+                                                          children: [
+                                                            Container(
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Color(
+                                                                        0xFF667EEA)
+                                                                    .withOpacity(
+                                                                        0.1),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            6),
+                                                              ),
+                                                              child: Icon(
+                                                                Icons
+                                                                    .access_time_rounded,
+                                                                size: 12,
+                                                                color: Color(
+                                                                    0xFF667EEA),
+                                                              ),
+                                                            ),
+                                                            SizedBox(width: 2),
+                                                            Text(
                                                               _formatDate(item[
                                                                   'created_at']),
                                                               style: TextStyle(
-                                                                fontSize: 11,
+                                                                fontSize: 12,
                                                                 color: Color(
                                                                     0xFF64748B),
                                                                 fontWeight:
                                                                     FontWeight
                                                                         .w600,
                                                               ),
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
                                                             ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      padding:
-                                                          EdgeInsets.all(8),
-                                                      decoration: BoxDecoration(
-                                                        gradient:
-                                                            LinearGradient(
-                                                          colors: [
-                                                            Color(0xFF667EEA),
-                                                            Color(0xFF764BA2)
                                                           ],
                                                         ),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(10),
-                                                        boxShadow: [
-                                                          BoxShadow(
-                                                            color: Color(
-                                                                    0xFF667EEA)
-                                                                .withOpacity(
-                                                                    0.3),
-                                                            blurRadius: 6,
-                                                            offset:
-                                                                Offset(0, 2),
+                                                        SizedBox(height: 2),
+                                                        Container(
+                                                          padding: EdgeInsets
+                                                              .symmetric(
+                                                            horizontal: 16,
+                                                            vertical: 8,
                                                           ),
-                                                        ],
-                                                      ),
-                                                      child: Icon(
-                                                        Icons
-                                                            .arrow_forward_ios_rounded,
-                                                        size: 10,
-                                                        color: Colors.white,
-                                                      ),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            gradient:
+                                                                LinearGradient(
+                                                              colors: [
+                                                                Color(
+                                                                    0xFF667EEA),
+                                                                Color(
+                                                                    0xFF764BA2)
+                                                              ],
+                                                            ),
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        20),
+                                                            boxShadow: [
+                                                              BoxShadow(
+                                                                color: Color(
+                                                                        0xFF667EEA)
+                                                                    .withOpacity(
+                                                                        0.3),
+                                                                blurRadius: 8,
+                                                                offset: Offset(
+                                                                    0, 4),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          child: Row(
+                                                            mainAxisSize:
+                                                                MainAxisSize
+                                                                    .min,
+                                                            children: [
+                                                              Text(
+                                                                'Read More',
+                                                                style:
+                                                                    TextStyle(
+                                                                  color: Colors
+                                                                      .white,
+                                                                  fontSize: 12,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600,
+                                                                ),
+                                                              ),
+                                                              SizedBox(
+                                                                  width: 2),
+                                                              Icon(
+                                                                Icons
+                                                                    .arrow_forward_ios_rounded,
+                                                                size: 12,
+                                                                color: Colors
+                                                                    .white,
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
                                                   ],
                                                 ),
-                                              ],
+                                              ),
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+
+                            // Page Indicators
+                            if (widget.news.length > 1)
+                              Container(
+                                padding: EdgeInsets.symmetric(vertical: 12),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: List.generate(
+                                    widget.news.length,
+                                    (index) => AnimatedContainer(
+                                      duration: Duration(milliseconds: 300),
+                                      margin:
+                                          EdgeInsets.symmetric(horizontal: 4),
+                                      width: _currentIndex == index ? 24 : 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        gradient: _currentIndex == index
+                                            ? LinearGradient(
+                                                colors: [
+                                                  Color(0xFF667EEA),
+                                                  Color(0xFF764BA2)
+                                                ],
+                                              )
+                                            : null,
+                                        color: _currentIndex == index
+                                            ? null
+                                            : Color(0xFF667EEA)
+                                                .withOpacity(0.3),
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            );
-                          },
+                          ],
                         ),
-                      ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

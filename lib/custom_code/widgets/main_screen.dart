@@ -3608,6 +3608,7 @@ class UploadNewsScreen extends StatefulWidget {
   const UploadNewsScreen({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _UploadNewsScreenState createState() => _UploadNewsScreenState();
 }
 
@@ -3956,7 +3957,16 @@ class _UploadNewsScreenState extends State<UploadNewsScreen> {
                       'trending',
                       'sports',
                       'technology',
-                      'health'
+                      'health',
+                      'Palakkad News',
+                      'Business',
+                      'Politics',
+                      'News',
+                      'Memorial',
+                      'Entertainment',
+                      'Jobs',
+                      'Local News',
+                      'general',
                     ]
                         .map((category) => DropdownMenuItem(
                               value: category,

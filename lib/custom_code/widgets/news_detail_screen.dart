@@ -306,15 +306,14 @@ ${newsItem!['description'] ?? ''}
 ${newsItem!['description'] ?? ''}....
 
 🔗 Read more: $newsUrl
-📰 തുടർന്ന് വായിക്കാം.
-ക്ലിക്ക് ചെയ്യൂ.👆
+
 
 𝐉𝐨𝐢𝐧 𝐎𝐮𝐫 𝐰𝐡𝐚𝐭𝐬𝐀𝐩𝐩 𝐆𝐫𝐨𝐮𝐩 🪀
 Palakkad Online News 
 https://chat.whatsapp.com/G6Zj0ajnIcQ8gm1GyCDgmG
 
 www.palakkadonlinenews.com
-#News #Breaking''';
+''';
 
       await Clipboard.setData(ClipboardData(text: shareText));
 

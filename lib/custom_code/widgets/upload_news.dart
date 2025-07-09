@@ -516,20 +516,39 @@ www.palakkadonlinenews.com
                         DropdownButton<String>(
                           value: _selectedCategory,
                           underline: SizedBox(),
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 14,
-                            color: Colors.white,
+                            color: Colors.black,
                           ),
+                          dropdownColor: Colors
+                              .white, // <-- sets background of the dropdown menu
                           items: [
+                            'Palakkad News',
+                            'Business',
+                            'Politics',
+                            'News',
+                            'Memorial',
+                            'Entertainment',
+                            'Jobs',
+                            'Local News',
+                            'general',
                             'breaking',
                             'trending',
                             'sports',
                             'technology',
                             'health'
                           ]
-                              .map((category) => DropdownMenuItem(
+                              .map((category) => DropdownMenuItem<String>(
                                     value: category,
-                                    child: Text(category.toUpperCase()),
+                                    child: Container(
+                                      color: Colors
+                                          .white, // optional, as dropdownColor already sets it
+                                      child: Text(
+                                        category.toUpperCase(),
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                      ),
+                                    ),
                                   ))
                               .toList(),
                           onChanged: (value) =>
@@ -751,13 +770,13 @@ www.palakkadonlinenews.com
                                       onTap: () => setState(() =>
                                           _selectedAdvertisingImage = null),
                                       child: Container(
-                                        padding: EdgeInsets.all(4),
+                                        padding: const EdgeInsets.all(4),
                                         decoration: BoxDecoration(
                                           color: Colors.black54,
                                           borderRadius:
                                               BorderRadius.circular(4),
                                         ),
-                                        child: Icon(Icons.close,
+                                        child: const Icon(Icons.close,
                                             color: Colors.white, size: 16),
                                       ),
                                     ),
@@ -780,8 +799,8 @@ www.palakkadonlinenews.com
                                     children: [
                                       Icon(Icons.add_photo_alternate_outlined,
                                           size: 24, color: Colors.grey[400]),
-                                      SizedBox(height: 4),
-                                      Text(
+                                      const SizedBox(height: 4),
+                                      const Text(
                                         'Add advertisement image',
                                         style: TextStyle(
                                           fontSize: 12,

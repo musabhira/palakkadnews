@@ -267,10 +267,7 @@ www.palakkadonlinenews.com
       String? advertisingImageUrl;
 
       // Clean the title for use in filename (remove special characters)
-      String cleanTitle = _titleController.text
-          .replaceAll(RegExp(r'[^\w\s-]'), '') // Remove special characters
-          .replaceAll(RegExp(r'\s+'), '_') // Replace spaces with underscores
-          .toLowerCase();
+      String cleanTitle = 'testing';
       if (cleanTitle.length > 50) {
         cleanTitle = cleanTitle.substring(0, 50);
       }
@@ -328,6 +325,7 @@ www.palakkadonlinenews.com
         _showSuccessDialog();
       }
     } catch (e) {
+      print('Error uploading news: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

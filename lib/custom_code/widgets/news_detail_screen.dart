@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:palakkad_news_app/custom_code/widgets/lazyloadingnews_widget.dart';
 import 'package:palakkad_news_app/custom_code/widgets/main_screen.dart';
 import 'package:palakkad_news_app/flutter_flow/flutter_flow_util.dart';
 import 'package:share_plus/share_plus.dart';
@@ -983,11 +984,23 @@ ${newsItem!['description'] ?? ''}
                         ),
                       ),
                       SizedBox(height: 16),
+                      // SizedBox(
+                      //   height: 200,
+                      //   child: SimplePageViewNewsWidget(
+                      //     news: news,
+                      //     onRefresh: _fetchNews,
+                      //   ),
+                      // ),
                       SizedBox(
                         height: 200,
-                        child: SimplePageViewNewsWidget(
-                          news: news,
-                          onRefresh: _fetchNews,
+                        child: LazyLoadingNewsWidget(
+                          category: 'breaking', // or 'all' for all categories
+                          onNavigateToDetail: (context, item) {
+                            // Your navigation logic
+                          },
+                          onShowDeleteConfirmation: (item) {
+                            // Your delete confirmation logic
+                          },
                         ),
                       ),
                       SizedBox(height: 18),

@@ -1,4 +1,5 @@
 // Automatic FlutterFlow imports
+import 'package:palakkad_news_app/custom_code/widgets/lazyloadingnews_widget.dart';
 import 'package:palakkad_news_app/custom_code/widgets/news_detail_screen.dart';
 
 import '/backend/supabase/supabase.dart';
@@ -380,12 +381,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             // Breaking News Header
             SliverToBoxAdapter(
               child: Container(
-                height: 200,
+                height: 250,
                 color: Colors.grey[100],
-                child: Container(
-                  child: SimplePageViewNewsWidget(
-                    news: news,
-                    onRefresh: _fetchNews,
+                child: SizedBox(
+                  height: 250,
+                  child: LazyLoadingNewsWidget(
+                    category: 'breaking', // or 'all' for all categories
+                    onNavigateToDetail: (context, item) {
+                      // Your navigation logic
+                    },
+                    onShowDeleteConfirmation: (item) {
+                      // Your delete confirmation logic
+                    },
                   ),
                 ),
               ),
@@ -3953,11 +3960,6 @@ class _UploadNewsScreenState extends State<UploadNewsScreen> {
                     ),
                     dropdownColor: Colors.white,
                     items: [
-                      'breaking',
-                      'trending',
-                      'sports',
-                      'technology',
-                      'health',
                       'Palakkad News',
                       'Business',
                       'Politics',
@@ -3967,6 +3969,11 @@ class _UploadNewsScreenState extends State<UploadNewsScreen> {
                       'Jobs',
                       'Local News',
                       'general',
+                      'breaking',
+                      'trending',
+                      'sports',
+                      'technology',
+                      'health'
                     ]
                         .map((category) => DropdownMenuItem(
                               value: category,
